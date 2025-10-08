@@ -4,6 +4,7 @@ from tkinter import *
 import tkinter as tk
 from PIL import Image, ImageTk  # Pillow library (pip install pillow)
 from bouncingboard import BouncingBoard
+from ball import Ball
 
 screen_w = 1390
 screen_h = 980
@@ -63,8 +64,11 @@ screen.tracer(0)
 turtle = RawTurtle(screen)
 
 # place paddle slightly above the bottom edge
-paddle_y = -(game_screen_h // 2) + 80
-bouncing_board = BouncingBoard(screen, (0, paddle_y), game_screen_w)
+board_location = -(game_screen_h // 2) + 80
+bouncing_board = BouncingBoard(screen, (0, board_location), game_screen_w)
+
+# a ball to appear
+ball = Ball()
 
 # force initial draw
 screen.update()
@@ -73,5 +77,11 @@ screen.update()
 root.bind("<Right>", lambda e: (bouncing_board.right(), screen.update()))
 root.bind("<Left>", lambda e: (bouncing_board.left(), screen.update()))
 
+game_is_on = True
+
+while game_is_on:
+    time.sleep(ball.move_speed)
+    screen.update()
+    ball.move()
 
 root.mainloop()
