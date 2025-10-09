@@ -6,7 +6,7 @@ class BouncingBoard(RawTurtle):
         self.penup()
         self.shape('square')
         self.color('#d3d3d3')
-        self.shapesize(stretch_wid=1, stretch_len=15)
+        self.shapesize(stretch_wid=1, stretch_len=15) # width 20 pixels, length 300 pixels
         self.goto(position)
         self.half_screen_size = game_screen_w // 2
 
