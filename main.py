@@ -1,4 +1,5 @@
 import time
+import os
 from turtle import ScrolledCanvas, RawTurtle, TurtleScreen
 from tkinter import *
 import tkinter as tk
@@ -6,6 +7,7 @@ from PIL import Image, ImageTk  # Pillow library (pip install pillow)
 from bouncingboard import BouncingBoard
 from ball import Ball
 from blocks import Blocks, Block
+from tkinter import font
 
 screen_w = 1390
 screen_h = 980
@@ -57,6 +59,21 @@ game_logo.grid(row=0, column=1, padx=30, pady=30)
 right_label = tk.Label(logo_frame, image=photo, bg="black")
 right_label.grid(row=0, column=2, padx=30, pady=30)
 
+def press_play(self):
+    play_button_frame = tk.Frame(root, bg='black')
+    play_button_frame.pack(pady=10)
+    # Create PLAY button (place it in the centre of the game_frame)
+    self.play_button = tk.Button(
+        master=play_button_frame,
+        text='PLAY',
+        font=('Press Start 2P', 16),
+        width=20,
+        height=10,
+        command=start_game
+    )
+    self.play_button.place(relx=0.5, rely=0.5, anchor='center')
+
+
 # Frame to hold the game area
 game_frame = tk.Frame(root, bg="black")
 game_frame.pack(pady=10)
@@ -66,8 +83,13 @@ canvas = ScrolledCanvas(
     game_frame,
     width=game_screen_w,
     height=game_screen_h
-    )
+)
 canvas.pack(fill=BOTH, expand=True)
+
+def start_game(self):
+    self.play_button.place_forget()   # hide the play button after clicking
+    ball.reset_position()        # reset ball to start
+    game_play()
 
 
 screen = TurtleScreen(canvas)
@@ -117,6 +139,5 @@ def game_play():
     root.after(int(ball.move_speed * 1000), game_play)
 
 
-game_play()
 
 root.mainloop()
