@@ -53,4 +53,3 @@ class Blocks:
     def create_all_lanes(self):
         for i in range(self.y_start, self.y_end, 32):
             self.create_lane(i)
-

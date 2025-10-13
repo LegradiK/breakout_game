@@ -23,7 +23,8 @@ class Ball(RawTurtle):
         self.x_move *= -1
 
     def reset_position(self):
-        self.reset()
+        self.goto(0, -250)
+        self.bounce_x()
 
 
 
