@@ -33,8 +33,8 @@ class BreakOutApp:
         self.set_up_game_canvas()
 
         # bind keys to root (Tkinter)
-        self.root.bind("<Right>", lambda e: (bouncing_board.right(), screen.update()))
-        self.root.bind("<Left>", lambda e: (bouncing_board.left(), screen.update()))
+        self.root.bind("<Right>", lambda e: (self.bouncing_board.right(), self.screen.update()))
+        self.root.bind("<Left>", lambda e: (self.bouncing_board.left(), self.screen.update()))
 
 
     def set_up_logo_frame(self):
@@ -93,7 +93,6 @@ class BreakOutApp:
 
     def on_closing(self):
         """ not let anything running when closing the screen with x """
-        global running
         running = False   # stop loop
         self.root.quit()
         self.root.destroy()
@@ -102,9 +101,6 @@ class BreakOutApp:
         """ delete PLAY button and start playing a game """
         self.play_button.pack_forget()   # hide the play button after clicking
         self.canvas.pack(fill=BOTH, expand=True) # show the game canvas
-
-        # create turtle screen and objects AFTER showing canvas
-        global screen, turtle, bouncing_board, ball, bricks, board_location
 
         # game screen with all the components
         self.screen = TurtleScreen(self.canvas)
@@ -144,7 +140,16 @@ class BreakOutApp:
             self.ball.bounce_y()
 
         if self.ball.ycor() < BOARD_LOCATION - 20:
-            self.ball.reset_position()
+            self.game_over()
+
+        # check block collisions
+        for block in self.bricks.blocks[:]:
+            if (block.left_wall < self.ball.xcor() < block.right_wall and
+                block.bottom_wall < self.ball.ycor() < block.upper_wall):
+                block.hideturtle()
+                self.bricks.blocks.remove(block)
+                self.ball.bounce_y()
+                break
 
         self.screen.update()
 
@@ -152,4 +157,79 @@ class BreakOutApp:
 
     def run(self):
         self.root.mainloop()
+
+    def game_over(self):
+        """stops game when board didn't hit the ball"""
+        self.running = False  # stop the game loop
+        # dim the game screen
+        overlay = tk.Frame(self.game_frame, bg='black')
+        overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
+        overlay.attributes = {}
+        try:
+            overlay.tk.call('tk', 'canvas', 'create', 'rectangle')
+        except Exception:
+            pass
+
+        dim_label = tk.Label(
+            overlay,
+            bg='black',
+            width=GAME_SCREEN_W,
+            height=GAME_SCREEN_H
+        )
+        dim_label.pack(fill='both', expand=True)
+        dim_label.configure(bg='#000000', highlightthickness=0)
+        dim_label.lower() # keep it behind text
+
+        game_overLabel = tk.Label(
+            overlay,
+            text='Game Over',
+            font=('Press Start 2P', 42, 'bold'),
+            fg='yellow',
+            bg='black'
+        )
+        game_overLabel.place(relx=0.5, rely=0.28, anchor='center')
+
+        play_againButton = tk.Button(
+            overlay,
+            text='PLAY AGAIN',
+            font=('Press Start 2P', 24),
+            width=12,
+            height=3,
+            fg='white',
+            bg='grey',
+            activebackground='blue',
+            activeforeground='yellow',
+            command=lambda: self.restart_game(overlay)
+        )
+        play_againButton.place(relx=0.36, rely=0.58, anchor='center')
+
+        exitButton = tk.Button(
+            overlay,
+            text='EXIT',
+            font=('Press Start 2P', 24),
+            width=8,
+            height=3,
+            fg='white',
+            bg='grey',
+            activebackground='blue',
+            activeforeground='yellow',
+            command=self.exit_game
+        )
+        exitButton.place(relx=0.7, rely=0.58, anchor='center')
+
+
+        self.screen.update()
+
+    def restart_game(self, overlay):
+        overlay.destroy()
+        self.running=True
+        self.start_game()
+
+    def exit_game(self):
+        """exit the game and close the window."""
+        self.running = False  # stop the game loop if running
+        try:
+            self.root.destroy()  # close the Tkinter window
+        except tk.TclError:
+            pass  # ignore if window already closed
 
