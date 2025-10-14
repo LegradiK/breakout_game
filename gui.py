@@ -15,6 +15,7 @@ GAME_SCREEN_W = 1390
 GAME_SCREEN_H = 850
 BOARD_LOCATION = -(GAME_SCREEN_H // 2) + 80
 
+
 class BreakOutApp:
     def __init__(self):
         self.running = True
@@ -29,13 +30,9 @@ class BreakOutApp:
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
         self.set_up_logo_frame()
+        self.set_up_score_frame()
         self.set_up_game_frame()
         self.set_up_game_canvas()
-
-        # bind keys to root (Tkinter)
-        self.root.bind("<Right>", lambda e: (self.bouncing_board.right(), self.screen.update()))
-        self.root.bind("<Left>", lambda e: (self.bouncing_board.left(), self.screen.update()))
-
 
     def set_up_logo_frame(self):
         # Top frame for game logo and title
@@ -46,7 +43,7 @@ class BreakOutApp:
         self.logo_frame.pack(pady=30)
         # left logo
         self.left_label = tk.Label(self.logo_frame, image=self.photo, bg="black")
-        self.left_label.grid(row=0, column=0, padx=30, pady=30)
+        self.left_label.grid(row=0, column=0, padx=30, pady=10)
         # set a logo
         self.game_logo = tk.Label(
             self.logo_frame,
@@ -56,10 +53,50 @@ class BreakOutApp:
             bg='black',
             anchor='center'
         )
-        self.game_logo.grid(row=0, column=1, padx=30, pady=30)
+        self.game_logo.grid(row=0, column=1, padx=30, pady=10)
         # right logo
         self.right_label = tk.Label(self.logo_frame, image=self.photo, bg="black")
-        self.right_label.grid(row=0, column=2, padx=30, pady=30)
+        self.right_label.grid(row=0, column=2, padx=30, pady=10)
+
+    def set_up_score_frame(self):
+        """score frame where life/score/player name appear"""
+        self.score_frame = tk.Frame(self.root, bg='black')
+        self.score_frame.pack(pady=5)
+
+        self.score_value = 0
+        self.score_label = tk.Label(
+            self.score_frame,
+            text=f"SCORE: {self.score_value}",
+            font=('Press Start 2P', 14),
+            fg='white',
+            bg='black'
+            )
+        self.score_label.grid(padx=500, row=0, column=0)
+
+        empty_heart_img = Image.open('empty_heart.png').resize((40, 40))
+        self.empty_heart_photo = ImageTk.PhotoImage(empty_heart_img)
+        red_heart_img = Image.open('red_heart.png').resize((48, 48))
+        self.red_heart_photo = ImageTk.PhotoImage(red_heart_img)
+
+        # Lives setup
+        self.lives = 3
+        self.life_labels = []
+        for i in range(3):
+            label = tk.Label(
+                self.score_frame,
+                image=self.red_heart_photo,
+                bg='black'
+                )
+            label.grid(padx=5, row=0, column=2 + i)
+            self.life_labels.append(label)
+
+    def life_update(self):
+        """Update heart icons based on remaining lives."""
+        for i, label in enumerate(self.life_labels):
+            if i < self.lives:
+                label.config(image=self.red_heart_photo)
+            else:
+                label.config(image=self.empty_heart_photo)
 
     def set_up_game_frame(self):
         # main frame for playing a game
@@ -111,6 +148,10 @@ class BreakOutApp:
         # place paddle slightly above the bottom edge
         self.bouncing_board = BouncingBoard(self.screen, (0, BOARD_LOCATION), GAME_SCREEN_W)
 
+        # bind keys to root (Tkinter)
+        self.root.bind("<Right>", lambda e: (self.bouncing_board.right(), self.screen.update()))
+        self.root.bind("<Left>", lambda e: (self.bouncing_board.left(), self.screen.update()))
+
         # a ball to appear
         self.ball = Ball(self.screen)
 
@@ -123,7 +164,7 @@ class BreakOutApp:
         self.game_play()
 
     def game_play(self):
-        """functionarity of the game"""
+        """functionality of the game"""
         if not self.running or not self.root.winfo_exists():
             return  # stop if the window was closed
 
@@ -140,7 +181,16 @@ class BreakOutApp:
             self.ball.bounce_y()
 
         if self.ball.ycor() < BOARD_LOCATION - 20:
-            self.game_over()
+            self.lives -= 1
+            self.life_update()
+            if self.lives <= 0:
+                self.game_over()
+            else:
+                self.ball.reset_position()
+                self.ball.bounce_y()
+
+        if self.ball.ycor() > (GAME_SCREEN_H // 2) - 60:
+            self.win()
 
         # check block collisions
         for block in self.bricks.blocks[:]:
@@ -149,6 +199,10 @@ class BreakOutApp:
                 block.hideturtle()
                 self.bricks.blocks.remove(block)
                 self.ball.bounce_y()
+
+                # update score
+                self.score_value += 5
+                self.score_label.config(text=f"SCORE: {self.score_value}")
                 break
 
         self.screen.update()
@@ -157,6 +211,75 @@ class BreakOutApp:
 
     def run(self):
         self.root.mainloop()
+
+    def win(self):
+        """stops game as player won"""
+        self.running = False  # stop the game loop
+        # dim the game screen
+        overlay = tk.Frame(self.game_frame, bg='black')
+        overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
+        overlay.attributes = {}
+        try:
+            overlay.tk.call('tk', 'canvas', 'create', 'rectangle')
+        except Exception:
+            pass
+
+        dim_label = tk.Label(
+            overlay,
+            bg='black',
+            width=GAME_SCREEN_W,
+            height=GAME_SCREEN_H
+        )
+        dim_label.pack(fill='both', expand=True)
+        dim_label.configure(bg='#000000', highlightthickness=0)
+        dim_label.lower() # keep it behind text
+
+        game_overLabel = tk.Label(
+            overlay,
+            text='You Won!',
+            font=('Press Start 2P', 42, 'bold'),
+            fg='yellow',
+            bg='black'
+        )
+        game_overLabel.place(relx=0.5, rely=0.26, anchor='center')
+        game_overLabel = tk.Label(
+            overlay,
+            text=f'\nYour final score: {self.score_value}',
+            font=('Press Start 2P', 26, 'bold'),
+            fg='white',
+            bg='black'
+        )
+        game_overLabel.place(relx=0.5, rely=0.36, anchor='center')
+        play_againButton = tk.Button(
+            overlay,
+            text='PLAY AGAIN',
+            font=('Press Start 2P', 24),
+            width=12,
+            height=3,
+            fg='white',
+            bg='grey',
+            activebackground='blue',
+            activeforeground='yellow',
+            command=lambda: self.restart_game(overlay)
+        )
+        play_againButton.place(relx=0.36, rely=0.58, anchor='center')
+
+        exitButton = tk.Button(
+            overlay,
+            text='EXIT',
+            font=('Press Start 2P', 24),
+            width=8,
+            height=3,
+            fg='white',
+            bg='grey',
+            activebackground='blue',
+            activeforeground='yellow',
+            command=self.exit_game
+        )
+        exitButton.place(relx=0.7, rely=0.58, anchor='center')
+
+
+        self.screen.update()
 
     def game_over(self):
         """stops game when board didn't hit the ball"""
@@ -223,6 +346,8 @@ class BreakOutApp:
     def restart_game(self, overlay):
         overlay.destroy()
         self.running=True
+        self.lives = 3
+        self.update_lives()
         self.start_game()
 
     def exit_game(self):
