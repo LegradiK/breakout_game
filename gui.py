@@ -1,4 +1,4 @@
-import time
+import json
 import os
 from turtle import ScrolledCanvas, RawTurtle, TurtleScreen
 from tkinter import *
@@ -7,13 +7,23 @@ from PIL import Image, ImageTk  # Pillow library (pip install pillow)
 from bouncingboard import BouncingBoard
 from ball import Ball
 from blocks import Blocks, Block
-from tkinter import font
 
 SCREEN_W = 1390
 SCREEN_H = 980
 GAME_SCREEN_W = 1390
 GAME_SCREEN_H = 850
 BOARD_LOCATION = -(GAME_SCREEN_H // 2) + 80
+LEADERBOARD_FILE = 'leaderboard.json'
+
+def load_leaderboard():
+    if not os.path.exists(LEADERBOARD_FILE):
+        return []
+    with open(LEADERBOARD_FILE, "r") as f:
+        return json.load(f)
+
+def save_leaderboard(leaderboard):
+    with open(LEADERBOARD_FILE, "w") as f:
+        json.dump(leaderboard, f, indent=4)
 
 
 class BreakOutApp:
@@ -28,6 +38,8 @@ class BreakOutApp:
         self.root.configure(bg='black')
         # attach on_closing to window manager close event
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.player_name = 'Guest'
+        self.speed_increase_milestones = set()
 
         self.set_up_logo_frame()
         self.set_up_score_frame()
@@ -63,6 +75,32 @@ class BreakOutApp:
         self.score_frame = tk.Frame(self.root, bg='black')
         self.score_frame.pack(pady=5)
 
+        self.playerLabel = tk.Label(
+            self.score_frame,
+            text='PLAYER: ',
+            font=('Press Start 2P', 14),
+            fg='white',
+            bg='black'
+        )
+        self.playerLabel.grid(padx=20, row=0, column=0)
+
+        self.player_name_var = tk.StringVar(value=self.player_name)
+        self.player_name = tk.Label(
+            self.score_frame,
+            textvariable=self.player_name_var,
+            font=('Press Start 2P', 14),
+            fg='white',
+            bg='black'
+        )
+        self.player_name.grid(padx=5, row=0, column=1)
+
+        self.empty_space = tk.Label(
+            self.score_frame,
+            fg='black',
+            bg='black'
+            )
+        self.empty_space.grid(padx=200, row=0, column=2)
+
         self.score_value = 0
         self.score_label = tk.Label(
             self.score_frame,
@@ -71,7 +109,7 @@ class BreakOutApp:
             fg='white',
             bg='black'
             )
-        self.score_label.grid(padx=500, row=0, column=0)
+        self.score_label.grid(padx=100, row=0, column=3)
 
         empty_heart_img = Image.open('empty_heart.png').resize((40, 40))
         self.empty_heart_photo = ImageTk.PhotoImage(empty_heart_img)
@@ -87,7 +125,7 @@ class BreakOutApp:
                 image=self.red_heart_photo,
                 bg='black'
                 )
-            label.grid(padx=5, row=0, column=2 + i)
+            label.grid(padx=5, row=0, column=4 + i)
             self.life_labels.append(label)
 
     def life_update(self):
@@ -103,6 +141,28 @@ class BreakOutApp:
         # Frame to hold the game area
         self.game_frame = tk.Frame(self.root, bg="black")
         self.game_frame.pack(pady=10)
+        # ask user name
+        self.user_nameLabel = tk.Label(
+            master=self.game_frame,
+            text='Player Name:',
+            font=('Press Start 2P', 22),
+            fg='white',
+            bg='black'
+        )
+        self.user_nameLabel.pack(pady=50)
+        self.nameEntry = tk.Entry(
+            master=self.game_frame,
+            width=15,
+            font=('Press Start 2P', 22),
+            fg='black',
+            bg='white',
+            justify='center'
+        )
+        self.nameEntry.pack(padx=50, ipady=10)
+        self.nameEntry.focus_set()
+        # bind Enter on name entry → moves focus to PLAY button
+        self.nameEntry.bind("<Return>", lambda e: self.play_button.focus_set())
+
         # Create PLAY button (place it in the centre of the game_frame)
         self.play_button = tk.Button(
             master=self.game_frame,
@@ -114,11 +174,11 @@ class BreakOutApp:
             bg='white',
             activebackground='blue',
             activeforeground='yellow',
-            command=self.start_game
+            command=lambda: self.start_game(self.nameEntry.get())
         )
         self.play_button.pack(pady=200)
         self.play_button.focus_set()
-        self.play_button.bind('<Return>', lambda e: self.start_game())
+        self.play_button.bind('<Return>', lambda e: self.start_game(self.nameEntry.get()))
 
     def set_up_game_canvas(self):
         # create canvas where the game appears
@@ -134,10 +194,18 @@ class BreakOutApp:
         self.root.quit()
         self.root.destroy()
 
-    def start_game(self):
+    def start_game(self, player_name=None):
         """ delete PLAY button and start playing a game """
+        self.user_nameLabel.pack_forget()
+        self.nameEntry.pack_forget()
         self.play_button.pack_forget()   # hide the play button after clicking
         self.canvas.pack(fill=BOTH, expand=True) # show the game canvas
+
+        # store a user name
+        self.player_name = player_name or 'Guest'
+        # update visible player name in the score frame
+        if hasattr(self, 'player_name_var'):
+            self.player_name_var.set(self.player_name)
 
         # game screen with all the components
         self.screen = TurtleScreen(self.canvas)
@@ -203,6 +271,11 @@ class BreakOutApp:
                 # update score
                 self.score_value += 5
                 self.score_label.config(text=f"SCORE: {self.score_value}")
+
+                # increase ball speed at certain score milestones
+                if self.score_value in (200, 400, 600) and self.score_value not in self.speed_increase_milestones:
+                    self.ball.ball_speed_up()
+                    self.speed_increase_milestones.add(self.score_value)
                 break
 
         self.screen.update()
@@ -212,9 +285,32 @@ class BreakOutApp:
     def run(self):
         self.root.mainloop()
 
+    def update_leaderboard(self):
+        leaderboard = load_leaderboard()
+        # Add current player
+        leaderboard.append({"name": self.player_name, "score": self.score_value})
+        # Sort descending by score
+        leaderboard.sort(key=lambda x: x["score"], reverse=True)
+        # Keep top 3
+        leaderboard = leaderboard[:3]
+        save_leaderboard(leaderboard)
+        return leaderboard
+
+    def get_leaderboard_text(self):
+        leaderboard = load_leaderboard()
+        if not leaderboard:
+            return "No scores yet"
+        text = "* Leaderboard Ranking *\n\n\n"
+        for i, entry in enumerate(leaderboard, 1):
+            text += f"{i}. Name: {entry['name']} Score:{entry['score']}\n\n"
+        return text
+
     def win(self):
         """stops game as player won"""
         self.running = False  # stop the game loop
+        # save score/player name in leaderboard if the score is in the top 3 in history
+        self.update_leaderboard()
+
         # dim the game screen
         overlay = tk.Frame(self.game_frame, bg='black')
         overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
@@ -241,7 +337,7 @@ class BreakOutApp:
             fg='yellow',
             bg='black'
         )
-        game_overLabel.place(relx=0.5, rely=0.26, anchor='center')
+        game_overLabel.place(relx=0.5, rely=0.22, anchor='center')
         game_overLabel = tk.Label(
             overlay,
             text=f'\nYour final score: {self.score_value}',
@@ -249,7 +345,20 @@ class BreakOutApp:
             fg='white',
             bg='black'
         )
-        game_overLabel.place(relx=0.5, rely=0.36, anchor='center')
+        game_overLabel.place(relx=0.5, rely=0.28, anchor='center')
+
+        leaderboard_text = self.get_leaderboard_text()
+        leader_board = tk.Label(
+            overlay,
+            text=leaderboard_text,
+            font=('Press Start 2P', 24),
+            fg='white',
+            bg='black',
+            justify='left',   # left-align multiple lines
+            anchor='nw'       # anchor top-left
+        )
+        leader_board.place(relx=0.5, rely=0.5, anchor='center')
+
         play_againButton = tk.Button(
             overlay,
             text='PLAY AGAIN',
@@ -262,7 +371,7 @@ class BreakOutApp:
             activeforeground='yellow',
             command=lambda: self.restart_game(overlay)
         )
-        play_againButton.place(relx=0.36, rely=0.58, anchor='center')
+        play_againButton.place(relx=0.36, rely=0.80, anchor='center')
 
         exitButton = tk.Button(
             overlay,
@@ -276,7 +385,7 @@ class BreakOutApp:
             activeforeground='yellow',
             command=self.exit_game
         )
-        exitButton.place(relx=0.7, rely=0.58, anchor='center')
+        exitButton.place(relx=0.7, rely=0.80, anchor='center')
 
 
         self.screen.update()
@@ -284,6 +393,9 @@ class BreakOutApp:
     def game_over(self):
         """stops game when board didn't hit the ball"""
         self.running = False  # stop the game loop
+        # save score/player name in leaderboard if the score is in the top 3 in history
+        self.update_leaderboard()
+
         # dim the game screen
         overlay = tk.Frame(self.game_frame, bg='black')
         overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
@@ -310,7 +422,19 @@ class BreakOutApp:
             fg='yellow',
             bg='black'
         )
-        game_overLabel.place(relx=0.5, rely=0.28, anchor='center')
+        game_overLabel.place(relx=0.5, rely=0.22, anchor='center')
+
+        leaderboard_text = self.get_leaderboard_text()
+        leader_board = tk.Label(
+            overlay,
+            text=leaderboard_text,
+            font=('Press Start 2P', 20),
+            fg='white',
+            bg='black',
+            justify='left',   # left-align multiple lines
+            anchor='nw'       # anchor top-left
+        )
+        leader_board.place(relx=0.5, rely=0.5, anchor='center')
 
         play_againButton = tk.Button(
             overlay,
@@ -324,7 +448,7 @@ class BreakOutApp:
             activeforeground='yellow',
             command=lambda: self.restart_game(overlay)
         )
-        play_againButton.place(relx=0.36, rely=0.58, anchor='center')
+        play_againButton.place(relx=0.36, rely=0.80, anchor='center')
 
         exitButton = tk.Button(
             overlay,
@@ -338,8 +462,7 @@ class BreakOutApp:
             activeforeground='yellow',
             command=self.exit_game
         )
-        exitButton.place(relx=0.7, rely=0.58, anchor='center')
-
+        exitButton.place(relx=0.7, rely=0.80, anchor='center')
 
         self.screen.update()
 
@@ -347,7 +470,9 @@ class BreakOutApp:
         overlay.destroy()
         self.running=True
         self.lives = 3
-        self.update_lives()
+        self.life_update()
+        self.score_value = 0
+        self.score_label.config(text=f"SCORE: {self.score_value}")
         self.start_game()
 
     def exit_game(self):
@@ -357,4 +482,7 @@ class BreakOutApp:
             self.root.destroy()  # close the Tkinter window
         except tk.TclError:
             pass  # ignore if window already closed
+
+
+
 

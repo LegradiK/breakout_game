@@ -9,7 +9,7 @@ class Ball(RawTurtle):
         self.setposition(x=0, y=-300)
         self.x_move = 10
         self.y_move = 10
-        self.move_speed = 0.02
+        self.move_speed = 0.04
 
     def move(self):
         new_x = self.xcor() + self.x_move
@@ -25,6 +25,12 @@ class Ball(RawTurtle):
     def reset_position(self):
         self.goto(0, -250)
         self.bounce_x()
+
+    def ball_speed_up(self):
+        if self.move_speed > 0.02:
+            self.move_speed -= 0.01
+        else:
+            self.move_speed = 0.02
 
 
 
