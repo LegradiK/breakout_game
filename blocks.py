@@ -5,10 +5,6 @@ import random
 COLOR_LIST = ['#FCC737', '#F26B0F', '#E73879', '#7E1891',
               '#E4004B', '#134686']
 
-weights = [1, 2, 1, 1, 3, 2, 1, 4, 1, 3,
-           1, 1, 1, 4, 1, 3, 2, 2, 1, 2,
-           1, 2, 1, 2, 1]
-
 class Block(RawTurtle):
     def __init__(self, screen, x_cor, y_cor, color):
         super().__init__(screen)
