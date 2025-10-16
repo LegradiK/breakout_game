@@ -14,8 +14,6 @@ class Block(RawTurtle):
         self.color(color)
         self.goto(x=x_cor,y=y_cor)
 
-        self.quantity = random.choice(weights)
-
         # define borders of the brick
         self.left_wall = self.xcor() - 30
         self.right_wall = self.xcor() + 30

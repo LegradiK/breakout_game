@@ -337,27 +337,27 @@ class BreakOutApp:
             fg='yellow',
             bg='black'
         )
-        game_overLabel.place(relx=0.5, rely=0.22, anchor='center')
+        game_overLabel.place(relx=0.5, rely=0.12, anchor='center')
         game_overLabel = tk.Label(
             overlay,
             text=f'\nYour final score: {self.score_value}',
-            font=('Press Start 2P', 26, 'bold'),
-            fg='white',
+            font=('Press Start 2P', 24, 'bold'),
+            fg='orange',
             bg='black'
         )
-        game_overLabel.place(relx=0.5, rely=0.28, anchor='center')
+        game_overLabel.place(relx=0.5, rely=0.22, anchor='center')
 
         leaderboard_text = self.get_leaderboard_text()
         leader_board = tk.Label(
             overlay,
             text=leaderboard_text,
-            font=('Press Start 2P', 24),
+            font=('Press Start 2P', 20),
             fg='white',
             bg='black',
             justify='left',   # left-align multiple lines
             anchor='nw'       # anchor top-left
         )
-        leader_board.place(relx=0.5, rely=0.5, anchor='center')
+        leader_board.place(relx=0.5, rely=0.52, anchor='center')
 
         play_againButton = tk.Button(
             overlay,
