@@ -8,28 +8,28 @@ A Python implementation of the classic **Breakout** arcade game — built with *
 
 ## 🎮 Features
 
-- 🧱 **Classic Breakout gameplay** – bounce the ball to break blocks to reach the ceiling!  
-- 🕹️ **Keyboard control** – move the paddle with arrow keys.  
-- 🧍 **Player name entry** – personalise your session.  
-- ❤️ **Lives system** – with pixel-art hearts.  
-- ⚡ **Speed increases** – ball moves faster as your score rises.  
-- 🏆 **Leaderboard** – saves and displays top 3 high scores (`leaderboard.json`).  
-- 👾 **Retro design** – pixel-art robot and 8-bit inspired “Press Start 2P” font.  
+- 🧱 **Classic Breakout gameplay** – bounce the ball to break blocks to reach the ceiling!
+- 🕹️ **Keyboard control** – move the paddle with arrow keys.
+- 🧍 **Player name entry** – personalise your session.
+- ❤️ **Lives system** – with pixel-art hearts.
+- ⚡ **Speed increases** – ball moves faster as your score rises.
+- 🏆 **Leaderboard** – saves and displays top 3 high scores (`leaderboard.json`).
+- 👾 **Retro design** – pixel-art robot and 8-bit inspired “Press Start 2P” font.
 
 ---
 
 ## 🖼️ Assets & Credits
 
-- 🤖 **Robot icon**:  
+- 🤖 **Robot icon**:
   [Robot icons created by YardenG – Flaticon](https://www.flaticon.com/free-icon/robot_8254111?term=robot&page=2&position=88&origin=search&related_id=8254111)
 
-- 🧡 **Heart pixel art**:  
+- 🧡 **Heart pixel art**:
   Created by ChatGPT.
 
 - **Start/Pause button**:
   ['Pause Play free icon created by Angelo Trolano](https://www.flaticon.com/free-icon/pause-play_5725942?term=pause&page=1&position=23&origin=search&related_id=5725942)
 
-- 🎨 **Font**:  
+- 🎨 **Font**:
   [“Press Start 2P”](https://fonts.google.com/specimen/Press+Start+2P) from Google Fonts.
 
 
@@ -96,5 +96,3 @@ Day 87 portfolio project - creating BreakOut Game
 Created using **Python (Tkinter, Pillow, Turtle Graphics)**
 
 
-'Press Start 2P' from google font
-heart pixel art from chatGPT
