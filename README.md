@@ -96,3 +96,5 @@ Day 87 portfolio project - creating BreakOut Game
 Created using **Python (Tkinter, Pillow, Turtle Graphics)**
 
 
+'Press Start 2P' from google font
+heart pixel art from chatGPT

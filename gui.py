@@ -1,12 +1,16 @@
 import json
 import os
+import webbrowser
 from turtle import ScrolledCanvas, RawTurtle, TurtleScreen
 from tkinter import *
 import tkinter as tk
+import customtkinter as ctk
+from CTkMenuBar import *
 from PIL import Image, ImageTk  # Pillow library (pip install pillow)
 from bouncingboard import BouncingBoard
 from ball import Ball
-from blocks import Blocks, Block
+from blocks import Blocks
+
 
 SCREEN_W = 1390
 SCREEN_H = 980
@@ -26,7 +30,7 @@ def save_leaderboard(leaderboard):
         json.dump(leaderboard, f, indent=4)
 
 
-class BreakOutApp:
+class BreakOutApp():
     def __init__(self):
         self.running = True
         self.root = tk.Tk()
@@ -40,15 +44,39 @@ class BreakOutApp:
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.player_name = 'Guest'
         self.speed_increase_milestones = set()
+        # pause
+        self.paused = False
+        self.pause_overlay = None  # placeholder for pause label
+
+
+        # Tkinter menu bar
+        self.menu_bar = tk.Menu(self.root)
+
+        # "Menu" dropdown
+        menu_dropdown = tk.Menu(self.menu_bar, tearoff=0)
+        menu_dropdown.add_command(label="Play", command=lambda: self.start_game(self.nameEntry.get()))
+        menu_dropdown.add_command(label="Exit", command=self.exit_game)
+        self.menu_bar.add_cascade(label="Menu", menu=menu_dropdown)
+
+        # "Help" dropdown
+        help_dropdown = tk.Menu(self.menu_bar, tearoff=0)
+        help_dropdown.add_command(label="Help - GitHub", command=self.open_github)
+        help_dropdown.add_command(label="About", command=self.open_about)
+        self.menu_bar.add_cascade(label="Help", menu=help_dropdown)
+
+        # attach menu bar to root
+        self.root.config(menu=self.menu_bar)
 
         self.set_up_logo_frame()
         self.set_up_score_frame()
         self.set_up_game_frame()
         self.set_up_game_canvas()
 
+        self.root.bint('<space>', self.toggle_pause)
+
     def set_up_logo_frame(self):
         # Top frame for game logo and title
-        robo_img = Image.open("robot.png").resize((64, 64))
+        robo_img = Image.open("assets/robot.png").resize((64, 64))
         self.photo = ImageTk.PhotoImage(robo_img)
         # Frame to hold everything
         self.logo_frame = tk.Frame(self.root, bg="black")
@@ -111,9 +139,9 @@ class BreakOutApp:
             )
         self.score_label.grid(padx=100, row=0, column=3)
 
-        empty_heart_img = Image.open('empty_heart.png').resize((40, 40))
+        empty_heart_img = Image.open('assets/empty_heart.png').resize((40, 40))
         self.empty_heart_photo = ImageTk.PhotoImage(empty_heart_img)
-        red_heart_img = Image.open('red_heart.png').resize((48, 48))
+        red_heart_img = Image.open('assets/red_heart.png').resize((48, 48))
         self.red_heart_photo = ImageTk.PhotoImage(red_heart_img)
 
         # Lives setup
@@ -232,9 +260,8 @@ class BreakOutApp:
         self.game_play()
 
     def game_play(self):
-        """functionality of the game"""
-        if not self.running or not self.root.winfo_exists():
-            return  # stop if the window was closed
+        if self.paused or not self.running or not self.root.winfo_exists():
+            return  # stop loop if paused
 
         self.ball.move()
 
@@ -483,6 +510,59 @@ class BreakOutApp:
         except tk.TclError:
             pass  # ignore if window already closed
 
+    def open_about(self):
+        """open 'About' popup page to show the copyright"""
+        about = tk.Toplevel(self.root)
+        about.title('About')
+        about.geometry('700x250')
+        about.resizable(False, False)
+        about.configure(bg='black')
 
+        label = tk.Label(
+            about,
+            text='BreakOut Game App\n\n'
+            'Created with Python, tkinter, Pillow, Turtle and CustomTkinter\n'
+            'copyright 2025 LegradiK',
+            font=('Arial', 16),
+            fg='white',
+            bg='black',
+            justify='center'
+        )
+        label.pack(expand=True, padx=20, pady=20)
+        close_button = tk.Button(
+            about,
+            text='Close',
+            font=('Arial', 14),
+            fg='white',
+            bg='grey',
+            command=about.destroy
+        )
+        close_button.pack(pady=10)
+
+    def open_github(self):
+        """Open Github project page in default browser"""
+        webbrowser.open_new("https://github.com/LegradiK/breakout_game.git")
+
+    def toggle_pause(self, event=None):
+        if not hasattr(self, 'paused'):
+            self.paused = False
+        if self.paused:
+            # Resume the game
+            self.paused = False
+            if self.pause_overlay:
+                self.pause_overlay.destroy()
+                self.pause_overlay = None
+            self.game_play()
+        else:
+            # pause the game
+            self.paused = True
+            self.pause_overlay = tk.Label(
+                self.game_frame,
+                text='PAUSED',
+                font=('Press Start 2P', 72, 'bold'),
+                fg='white',
+                bg='black'
+            )
+            self.pause_overlay.place(relx=0.5, rely=0.5, anchor='center')
 
 
