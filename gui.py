@@ -132,7 +132,6 @@ class BreakOutApp():
             command=self.toggle_pause
             )
         self.start_pause.grid(padx=200, row=0, column=2)
-        self.root.bind('<space>', self.toggle_pause)
 
         self.score_value = 0
         self.score_label = tk.Label(
