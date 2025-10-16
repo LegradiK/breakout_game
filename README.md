@@ -26,11 +26,12 @@ A Python implementation of the classic **Breakout** arcade game — built with *
 - 🧡 **Heart pixel art**:  
   Created by ChatGPT.
 
+- **Start/Pause button**:
+  ['Pause Play free icon created by Angelo Trolano](https://www.flaticon.com/free-icon/pause-play_5725942?term=pause&page=1&position=23&origin=search&related_id=5725942)
+
 - 🎨 **Font**:  
   [“Press Start 2P”](https://fonts.google.com/specimen/Press+Start+2P) from Google Fonts.
 
-- **Start/Pause button**
-  ['Pause Play free icon created by Angelo Trolano](https://www.flaticon.com/free-icon/pause-play_5725942?term=pause&page=1&position=23&origin=search&related_id=5725942)
 
 ---
 
