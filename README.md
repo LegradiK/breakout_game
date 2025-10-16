@@ -8,7 +8,7 @@ A Python implementation of the classic **Breakout** arcade game — built with *
 
 ## 🎮 Features
 
-- 🧱 **Classic Breakout gameplay** – bounce the ball to break all the blocks!  
+- 🧱 **Classic Breakout gameplay** – bounce the ball to break blocks to reach the ceiling!  
 - 🕹️ **Keyboard control** – move the paddle with arrow keys.  
 - 🧍 **Player name entry** – personalise your session.  
 - ❤️ **Lives system** – with pixel-art hearts.  
