@@ -72,7 +72,7 @@ class BreakOutApp():
         self.set_up_game_frame()
         self.set_up_game_canvas()
 
-        self.root.bint('<space>', self.toggle_pause)
+        self.start_pause.config(image=self.start_pause_photo)
 
     def set_up_logo_frame(self):
         # Top frame for game logo and title
@@ -122,12 +122,17 @@ class BreakOutApp():
         )
         self.player_name.grid(padx=5, row=0, column=1)
 
-        self.empty_space = tk.Label(
+        start_pause_img = Image.open("assets/pause-play.png").resize((52, 40))
+        self.start_pause_photo = ImageTk.PhotoImage(start_pause_img)
+        self.start_pause = tk.Button(
             self.score_frame,
+            image=self.start_pause_photo,
             fg='black',
-            bg='black'
+            highlightthickness=0,
+            command=self.toggle_pause
             )
-        self.empty_space.grid(padx=200, row=0, column=2)
+        self.start_pause.grid(padx=200, row=0, column=2)
+        self.root.bind('<space>', self.toggle_pause)
 
         self.score_value = 0
         self.score_label = tk.Label(
@@ -338,7 +343,7 @@ class BreakOutApp():
         # save score/player name in leaderboard if the score is in the top 3 in history
         self.update_leaderboard()
 
-        # dim the game screen
+        # on top of the game screen
         overlay = tk.Frame(self.game_frame, bg='black')
         overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
         overlay.attributes = {}
@@ -423,7 +428,7 @@ class BreakOutApp():
         # save score/player name in leaderboard if the score is in the top 3 in history
         self.update_leaderboard()
 
-        # dim the game screen
+        # on top of the game screen
         overlay = tk.Frame(self.game_frame, bg='black')
         overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
         overlay.attributes = {}
@@ -543,25 +548,38 @@ class BreakOutApp():
         """Open Github project page in default browser"""
         webbrowser.open_new("https://github.com/LegradiK/breakout_game.git")
 
-    def toggle_pause(self, event=None):
-        if not hasattr(self, 'paused'):
-            self.paused = False
+    def toggle_pause(self, key=None):
+        if not self.running or not hasattr(self, 'ball'):
+            return
+
         if self.paused:
             # Resume the game
             self.paused = False
             if self.pause_overlay:
                 self.pause_overlay.destroy()
                 self.pause_overlay = None
+            if hasattr(self, 'pause_frame') and self.pause_frame:
+                self.pause_frame.destroy()
+                self.pause_frame = None
             self.game_play()
         else:
-            # pause the game
+            # Pause the game
             self.paused = True
+
+            # Dimmed background overlay
+            self.pause_frame = tk.Frame(self.game_frame, bg='black')
+            self.pause_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
+            self.pause_frame.attributes = {}
+
+            # "PAUSED" text label
             self.pause_overlay = tk.Label(
-                self.game_frame,
+                self.pause_frame,
                 text='PAUSED',
                 font=('Press Start 2P', 72, 'bold'),
                 fg='white',
-                bg='black'
+                bg='black',
+                padx=100,
+                pady=60
             )
             self.pause_overlay.place(relx=0.5, rely=0.5, anchor='center')
 
