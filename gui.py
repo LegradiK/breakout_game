@@ -47,7 +47,11 @@ class BreakOutApp():
         # pause
         self.paused = False
         self.pause_overlay = None  # placeholder for pause label
+        # ball's xcor and ycor / location
+        self.ball_xcor = None
+        self.ball_ycor = None
 
+        self.game_loop_id = None
 
         # Tkinter menu bar
         self.menu_bar = tk.Menu(self.root)
@@ -73,6 +77,7 @@ class BreakOutApp():
         self.set_up_game_canvas()
 
         self.start_pause.config(image=self.start_pause_photo)
+
 
     def set_up_logo_frame(self):
         # Top frame for game logo and title
@@ -252,6 +257,13 @@ class BreakOutApp():
         self.root.bind("<Right>", lambda e: (self.bouncing_board.right(), self.screen.update()))
         self.root.bind("<Left>", lambda e: (self.bouncing_board.left(), self.screen.update()))
 
+        # Bind space key for pause/unpause
+        def space_handler(event):
+            self.toggle_pause(event)
+            return "break"  # prevents default Turtle behaviour that can reset ball
+
+        self.root.bind("<space>", space_handler)
+
         # a ball to appear
         self.ball = Ball(self.screen)
 
@@ -260,7 +272,9 @@ class BreakOutApp():
 
         # force initial draw
         self.screen.update()
-        self.ball.reset_position()        # reset ball to start
+        # Only reset if starting fresh (no saved coordinates)
+        if not self.ball_xcor and not self.ball_ycor:
+            self.ball.reset_position()
         self.game_play()
 
     def game_play(self):
@@ -311,7 +325,15 @@ class BreakOutApp():
 
         self.screen.update()
 
-        self.root.after(int(self.ball.move_speed * 1000), self.game_play)
+        # Prevent overlapping scheduled loops:
+        if self.game_loop_id:
+            try:
+                self.root.after_cancel(self.game_loop_id)
+            except Exception:
+                pass
+            self.game_loop_id = None
+
+        self.game_loop_id = self.root.after(int(self.ball.move_speed * 1000), self.game_play)
 
     def run(self):
         self.root.mainloop()
@@ -547,39 +569,61 @@ class BreakOutApp():
         """Open Github project page in default browser"""
         webbrowser.open_new("https://github.com/LegradiK/breakout_game.git")
 
-    def toggle_pause(self, key=None):
+    def toggle_pause(self, event=None):
         if not self.running or not hasattr(self, 'ball'):
             return
 
         if self.paused:
-            # Resume the game
+            # === Resume the game ===
             self.paused = False
+
+            # Restore ball position and heading
+            if self.ball_xcor is not None and self.ball_ycor is not None:
+                self.ball.goto(self.ball_xcor, self.ball_ycor)
+            if self.paused_heading is not None:
+                self.ball.setheading(self.paused_heading)
+
+            # Remove pause overlay
             if self.pause_overlay:
                 self.pause_overlay.destroy()
                 self.pause_overlay = None
             if hasattr(self, 'pause_frame') and self.pause_frame:
                 self.pause_frame.destroy()
                 self.pause_frame = None
+
+            # Continue game loop
             self.game_play()
+
         else:
-            # Pause the game
+            # === Pause the game ===
             self.paused = True
 
-            # Dimmed background overlay
+            # Save ball position and heading
+            self.ball_xcor = self.ball.xcor()
+            self.ball_ycor = self.ball.ycor()
+            try:
+                self.paused_heading = self.ball.heading()
+            except Exception:
+                self.paused_heading = None
+
+            # Cancel scheduled loop so ball stops moving
+            if self.game_loop_id:
+                try:
+                    self.root.after_cancel(self.game_loop_id)
+                except Exception:
+                    pass
+                self.game_loop_id = None
+
+            # Dimmed overlay
             self.pause_frame = tk.Frame(self.game_frame, bg='black')
             self.pause_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
-            self.pause_frame.attributes = {}
 
-            # "PAUSED" text label
             self.pause_overlay = tk.Label(
                 self.pause_frame,
                 text='PAUSED',
                 font=('Press Start 2P', 72, 'bold'),
                 fg='white',
-                bg='black',
-                padx=100,
-                pady=60
+                bg='black'
             )
             self.pause_overlay.place(relx=0.5, rely=0.5, anchor='center')
-
 
