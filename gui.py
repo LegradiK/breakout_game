@@ -574,7 +574,7 @@ class BreakOutApp():
             return
 
         if self.paused:
-            # === Resume the game ===
+            # Resume the game
             self.paused = False
 
             # Restore ball position and heading
@@ -595,7 +595,7 @@ class BreakOutApp():
             self.game_play()
 
         else:
-            # === Pause the game ===
+            # Pause the game
             self.paused = True
 
             # Save ball position and heading
