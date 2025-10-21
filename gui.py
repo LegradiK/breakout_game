@@ -262,7 +262,7 @@ class BreakOutApp():
             self.toggle_pause(event)
             return "break"  # prevents default Turtle behaviour that can reset ball
 
-        self.root.bind("<space>", space_handler)
+        self.root.bind("<space>", lambda e: space_handler())
 
         # a ball to appear
         self.ball = Ball(self.screen)
@@ -591,6 +591,7 @@ class BreakOutApp():
                 self.pause_frame.destroy()
                 self.pause_frame = None
 
+            self.screen.update()
             # Continue game loop
             self.game_play()
 
