@@ -198,7 +198,7 @@ class BreakOutApp():
         self.nameEntry.pack(padx=50, ipady=10)
         self.nameEntry.focus_set()
         # bind Enter on name entry → moves focus to PLAY button
-        self.nameEntry.bind("<Return>", lambda e: self.play_button.focus_set())
+        self.enter_binding = self.nameEntry.bind("<Return>", lambda e: self.play_button.focus_set())
 
         # Create PLAY button (place it in the centre of the game_frame)
         self.play_button = tk.Button(
@@ -232,14 +232,24 @@ class BreakOutApp():
         self.root.destroy()
 
     def start_game(self, player_name=None):
+        # Unbind Enter key so it no longer works once the game starts
+        if hasattr(self, "enter_binding") and self.enter_binding:
+            self.nameEntry.unbind("<Return>", self.enter_binding)
+            self.enter_binding = None
+        self.play_button.unbind('<Return>')
+
         """ delete PLAY button and start playing a game """
         self.user_nameLabel.pack_forget()
         self.nameEntry.pack_forget()
         self.play_button.pack_forget()   # hide the play button after clicking
         self.canvas.pack(fill=BOTH, expand=True) # show the game canvas
 
-        # store a user name
-        self.player_name = player_name or 'Guest'
+        # Only update player name if a new one is provided
+        if player_name:
+            self.player_name = player_name
+        else:
+            self.player_name = 'Guest'
+
         # update visible player name in the score frame
         if hasattr(self, 'player_name_var'):
             self.player_name_var.set(self.player_name)
@@ -257,24 +267,32 @@ class BreakOutApp():
         self.root.bind("<Right>", lambda e: (self.bouncing_board.right(), self.screen.update()))
         self.root.bind("<Left>", lambda e: (self.bouncing_board.left(), self.screen.update()))
 
-        # Bind space key for pause/unpause
-        def space_handler(event):
-            self.toggle_pause(event)
-            return "break"  # prevents default Turtle behaviour that can reset ball
+        self.root.bind("<space>", lambda e: self.toggle_pause(e))
 
-        self.root.bind("<space>", lambda e: space_handler())
+        # Always create new ball and blocks for a new game
+        if hasattr(self, 'ball'):
+            self.ball.hideturtle()
+            del self.ball
+        if hasattr(self, 'bricks'):
+            for block in self.bricks.blocks:
+                block.hideturtle()
+            del self.bricks
 
-        # a ball to appear
         self.ball = Ball(self.screen)
-
-        # bricks to appear
         self.bricks = Blocks(self.screen, GAME_SCREEN_W)
 
         # force initial draw
         self.screen.update()
+
         # Only reset if starting fresh (no saved coordinates)
-        if not self.ball_xcor and not self.ball_ycor:
+        if self.ball_xcor is None and self.ball_ycor is None:
             self.ball.reset_position()
+        else:
+            self.ball.goto(self.ball_xcor, self.ball_ycor)
+            if hasattr(self, 'paused_heading') and self.paused_heading is not None:
+                self.ball.setheading(self.paused_heading)
+
+        # Start the game loop immediately
         self.game_play()
 
     def game_play(self):
@@ -577,12 +595,6 @@ class BreakOutApp():
             # Resume the game
             self.paused = False
 
-            # Restore ball position and heading
-            if self.ball_xcor is not None and self.ball_ycor is not None:
-                self.ball.goto(self.ball_xcor, self.ball_ycor)
-            if self.paused_heading is not None:
-                self.ball.setheading(self.paused_heading)
-
             # Remove pause overlay
             if self.pause_overlay:
                 self.pause_overlay.destroy()
@@ -602,10 +614,7 @@ class BreakOutApp():
             # Save ball position and heading
             self.ball_xcor = self.ball.xcor()
             self.ball_ycor = self.ball.ycor()
-            try:
-                self.paused_heading = self.ball.heading()
-            except Exception:
-                self.paused_heading = None
+            self.paused_heading = self.ball.heading()
 
             # Cancel scheduled loop so ball stops moving
             if self.game_loop_id:
