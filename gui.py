@@ -76,7 +76,7 @@ class BreakOutApp():
         self.set_up_game_frame()
         self.set_up_game_canvas()
 
-        self.start_pause.config(image=self.start_pause_photo)
+        self.start_pause.config(image=self.start_pause_photo, command=self.toggle_pause_unpause)
 
 
     def set_up_logo_frame(self):
@@ -134,7 +134,7 @@ class BreakOutApp():
             image=self.start_pause_photo,
             fg='black',
             highlightthickness=0,
-            command=self.toggle_pause
+            command=self.toggle_pause_unpause
             )
         self.start_pause.grid(padx=200, row=0, column=2)
 
@@ -267,7 +267,7 @@ class BreakOutApp():
         self.root.bind("<Right>", lambda e: (self.bouncing_board.right(), self.screen.update()))
         self.root.bind("<Left>", lambda e: (self.bouncing_board.left(), self.screen.update()))
 
-        self.root.bind("<space>", lambda e: self.toggle_pause(e))
+        self.root.bind("<space>", self.toggle_pause_unpause)
 
         # Always create new ball and blocks for a new game
         if hasattr(self, 'ball'):
@@ -294,6 +294,7 @@ class BreakOutApp():
 
         # Start the game loop immediately
         self.game_play()
+        self.canvas.focus_set()
 
     def game_play(self):
         if self.paused or not self.running or not self.root.winfo_exists():
@@ -307,9 +308,6 @@ class BreakOutApp():
         # ball bounces back when hitting the wallls - both sides
         if self.ball.xcor() > (GAME_SCREEN_W // 2) - 24 or self.ball.xcor() < -(GAME_SCREEN_W // 2) + 24:
             self.ball.bounce_x()
-        # Bounce off paddle
-        if self.ball.ycor() < BOARD_LOCATION + 20 and self.ball.distance(self.bouncing_board) < 160:
-            self.ball.bounce_y()
 
         if self.ball.ycor() < BOARD_LOCATION - 20:
             self.lives -= 1
@@ -319,6 +317,12 @@ class BreakOutApp():
             else:
                 self.ball.reset_position()
                 self.ball.bounce_y()
+                self.game_loop_id = self.root.after(int(self.ball.move_speed * 1000), self.game_play)
+            return
+
+        # Bounce off paddle
+        if self.ball.ycor() < BOARD_LOCATION + 17 and self.ball.distance(self.bouncing_board) < 160:
+            self.ball.bounce_y()
 
         if self.ball.ycor() > (GAME_SCREEN_H // 2) - 60:
             self.win()
@@ -587,13 +591,14 @@ class BreakOutApp():
         """Open Github project page in default browser"""
         webbrowser.open_new("https://github.com/LegradiK/breakout_game.git")
 
-    def toggle_pause(self, event=None):
+    def toggle_unpause(self, event=None):
         if not self.running or not hasattr(self, 'ball'):
             return
 
         if self.paused:
             # Resume the game
             self.paused = False
+            self.unpaused = True
 
             # Remove pause overlay
             if self.pause_overlay:
@@ -607,15 +612,14 @@ class BreakOutApp():
             # Continue game loop
             self.game_play()
 
-        else:
-            # Pause the game
-            self.paused = True
 
+    def pause(self):
+        if not self.paused and self.running and hasattr(self, 'ball'):
+            self.paused = True
             # Save ball position and heading
             self.ball_xcor = self.ball.xcor()
             self.ball_ycor = self.ball.ycor()
             self.paused_heading = self.ball.heading()
-
             # Cancel scheduled loop so ball stops moving
             if self.game_loop_id:
                 try:
@@ -623,11 +627,9 @@ class BreakOutApp():
                 except Exception:
                     pass
                 self.game_loop_id = None
-
             # Dimmed overlay
             self.pause_frame = tk.Frame(self.game_frame, bg='black')
             self.pause_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
-
             self.pause_overlay = tk.Label(
                 self.pause_frame,
                 text='PAUSED',
@@ -637,3 +639,27 @@ class BreakOutApp():
             )
             self.pause_overlay.place(relx=0.5, rely=0.5, anchor='center')
 
+    def unpause(self):
+        if self.paused and self.running and hasattr(self, 'ball'):
+            self.paused = False
+            # Remove pause overlay
+            if self.pause_overlay:
+                self.pause_overlay.destroy()
+                self.pause_overlay = None
+            if hasattr(self, 'pause_frame') and self.pause_frame:
+                self.pause_frame.destroy()
+                self.pause_frame = None
+            # Restore ball position and heading
+            if self.ball_xcor is not None and self.ball_ycor is not None:
+                self.ball.goto(self.ball_xcor, self.ball_ycor)
+            if hasattr(self, 'paused_heading') and self.paused_heading is not None:
+                self.ball.setheading(self.paused_heading)
+            self.screen.update()
+            # Continue game loop
+            self.game_play()
+
+    def toggle_pause_unpause(self, event=None):
+        if self.paused:
+            self.unpause()
+        else:
+            self.pause()
