@@ -58,7 +58,6 @@ class BreakOutApp():
 
         # "Menu" dropdown
         menu_dropdown = tk.Menu(self.menu_bar, tearoff=0)
-        menu_dropdown.add_command(label="Play", command=lambda: self.start_game(self.nameEntry.get()))
         menu_dropdown.add_command(label="Exit", command=self.exit_game)
         self.menu_bar.add_cascade(label="Menu", menu=menu_dropdown)
 
@@ -245,10 +244,14 @@ class BreakOutApp():
         self.canvas.pack(fill=BOTH, expand=True) # show the game canvas
 
         # Only update player name if a new one is provided
-        if player_name:
-            self.player_name = player_name
-        else:
-            self.player_name = 'Guest'
+        if player_name is not None:
+            player_name = player_name.strip()
+            if player_name:
+                self.player_name = player_name
+            else:
+                self.player_name = "Guest"
+
+
 
         # update visible player name in the score frame
         if hasattr(self, 'player_name_var'):
@@ -309,19 +312,22 @@ class BreakOutApp():
         if self.ball.xcor() > (GAME_SCREEN_W // 2) - 24 or self.ball.xcor() < -(GAME_SCREEN_W // 2) + 24:
             self.ball.bounce_x()
 
-        if self.ball.ycor() < BOARD_LOCATION - 20:
+        if self.ball.ycor() < BOARD_LOCATION + 8:
             self.lives -= 1
             self.life_update()
+            self.ball.hideturtle() # hide the ball
             if self.lives <= 0:
                 self.game_over()
             else:
                 self.ball.reset_position()
-                self.ball.bounce_y()
+                self.ball.setheading(60)
+                self.ball.showturtle() # show the ball
+
                 self.game_loop_id = self.root.after(int(self.ball.move_speed * 1000), self.game_play)
             return
 
-        # Bounce off paddle
-        if self.ball.ycor() < BOARD_LOCATION + 17 and self.ball.distance(self.bouncing_board) < 160:
+        if (BOARD_LOCATION + 5 <= self.ball.ycor() < BOARD_LOCATION + 17 and
+            self.ball.distance(self.bouncing_board) < 160):
             self.ball.bounce_y()
 
         if self.ball.ycor() > (GAME_SCREEN_H // 2) - 60:

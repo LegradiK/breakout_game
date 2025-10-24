@@ -1,4 +1,5 @@
 from turtle import RawTurtle
+import random
 
 class Ball(RawTurtle):
     def __init__(self, screen):
@@ -24,7 +25,8 @@ class Ball(RawTurtle):
 
     def reset_position(self):
         self.goto(0, -250)
-        self.bounce_x()
+        self.x_move = random.choice([-10, 10])
+        self.y_move = abs(self.y_move)
 
     def ball_speed_up(self):
         if self.move_speed > 0.02:
