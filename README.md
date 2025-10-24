@@ -37,14 +37,21 @@ A Python implementation of the classic **Breakout** arcade game — built with *
 
 ## 🧩 Project Structure
 ``` breakout_game/
-├── breakout_game.py # Main application file
+├── main.py # Main application file
+├── gui.py
 ├── ball.py # Ball class (movement, bounce, speed)
 ├── bouncingboard.py # Paddle control and movement
 ├── blocks.py # Block and block-lane creation
 ├── leaderboard.json # Stores top 3 scores
-├── robot.png # Logo icon
-├── red_heart.png # Full heart icon
-├── empty_heart.png # Empty heart icon
+├── assets
+    ├── robot.png # Logo icon
+    ├── red_heart.png # Full heart icon
+    ├── empty_heart.png # Empty heart icon
+    ├── pause-play.png # Pause/Play icon
+├── documentations
+    ├── OFL.txt # documentation for 'Press Start 2P'
+├── LICENSE # MIT license
+├── PressStart2P-Regular.ttf # special retro stype font
 └── README.md # This file
 ```
 
@@ -72,8 +79,9 @@ pip install pillow
    python3 main.py
 3. Enter your **player name** and press **Enter** or click **Play**.
 4. Use **Left arrow ←** and **Right arrow →** keys to move the bouncing board.
-5. Break the bricks to reach the top ceiling to win!
-6. Check your score and ranking on the leaderboard.
+5. Use **Space key** or click **Play/Pause button** to pause the game when needed.
+6. Break the bricks to reach the top ceiling to win!
+7. Check your score and ranking on the leaderboard.
 
 ## 🧠 Game Logic Summary
 
@@ -84,8 +92,8 @@ pip install pillow
 - If the ball drops below the paddle:
   - You lose a life.
 - Lose all 3 lives → **Game Over**
-- Destroy all bricks → **You Win!**
-- Your score and name are stored in leaderboard.json.
+- Ball touch the top ceiling → **You Win!**
+- Your score and name are stored in leaderboard.json. if the score is in top 3
 
 ## 📜 License
 MIT License
