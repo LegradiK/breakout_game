@@ -92,7 +92,7 @@ pip install pillow
 - If the ball drops below the paddle:
   - You lose a life.
 - Lose all 3 lives → **Game Over**
-- Ball touch the top ceiling → **You Win!**
+- Ball touchs the top ceiling → **You Win!**
 - Your score and name are stored in leaderboard.json. if the score is in top 3
 
 ## 📜 License
